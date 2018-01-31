@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/pressly/chi"
@@ -40,10 +42,41 @@ func (s *SumImpl) Sum(ctx context.Context, r *pb.SumRequest) (*pb.SumResponse, e
 	}, nil
 }
 
+// Wait implements SummatorServer.Wait.
+func (s *SumImpl) Wait(ctx context.Context, r *pb.WaitRequest) (*pb.WaitResponse, error) {
+	fmt.Println(r.GetName(), " Start to sleep 100 sec")
+	time.Sleep(100 * time.Second)
+	fmt.Println(r.GetName(), " Stop sleeping")
+
+	return &pb.WaitResponse{
+		Error: "OK",
+	}, nil
+}
+
+// Hello implements SummatorServer.Hello.
+func (s *SumImpl) Hello(ctx context.Context, r *pb.StrMessage) (*pb.StrMessage, error) {
+	return &pb.StrMessage{
+		Value: "Hello:" + r.Value,
+	}, nil
+}
+
 // GetDescription is a simple alias to the ServiceDesc constructor.
 // It makes it possible to register the service implementation @ the server.
 func (s *SumImpl) GetDescription() transport.ServiceDesc {
 	return pb.NewSummatorServiceDesc(s)
+}
+
+// EchoImpl is an implementation of EchoService.
+type EchoImpl struct{}
+
+// Echo implements EchoServer.Echo
+func (s *EchoImpl) Echo(ctx context.Context, r *pb.StringMessage) (*pb.StringMessage, error) {
+	return r, nil
+}
+
+// GetDescription is a simple alias to the ServiceDesc constructor.
+func (s *EchoImpl) GetDescription() transport.ServiceDesc {
+	return pb.NewEchoServerServiceDesc(s)
 }
 
 func main() {
@@ -55,9 +88,11 @@ func main() {
 	hmux := chi.NewRouter()
 	hmux.Mount("/", http.FileServer(staticFS))
 
-	impl := &SumImpl{}
+	sumimpl := &SumImpl{}
 	srv := server.NewServer(
-		8080,
+		8800,
+		// Need different http port
+		//server.WithHTTPPort(9000),
 		// Pass our mux with Swagger UI
 		server.WithHTTPMux(hmux),
 		// Recover from HTTP panics
@@ -65,7 +100,15 @@ func main() {
 		// Recover from gRPC panics
 		server.WithGRPCUnaryMiddlewares(mwgrpc.UnaryPanicHandler(log.Default)),
 	)
-	err = srv.Run(impl)
+
+	echoimpl := &EchoImpl{}
+	srvImpls := []transport.Service{sumimpl, echoimpl}
+
+	//Single service
+	//err = srv.Run(sumimpl)
+
+	//multi services
+	err = srv.Runs(srvImpls)
 	if err != nil {
 		logrus.Fatal(err)
 	}

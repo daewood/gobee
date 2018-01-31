@@ -6,7 +6,8 @@ type CompoundServiceDesc struct {
 	svc []ServiceDesc
 }
 
-func NewCompoundServiceDesc(desc ...ServiceDesc) *CompoundServiceDesc {
+// NewCompoundServiceDesc compoundservice describe
+func NewCompoundServiceDesc(desc []ServiceDesc) *CompoundServiceDesc {
 	return &CompoundServiceDesc{svc: desc}
 }
 

@@ -3,11 +3,11 @@
 // DO NOT EDIT!
 
 /*
-Package sumpb is a self-registering gRPC and JSON+Swagger service definition.
+Package example is a self-registering gRPC and JSON+Swagger service definition.
 
 It conforms to the github.com/daewood/gobee Service interface.
 */
-package sumpb
+package example
 
 import (
 	"net/http"
@@ -68,6 +68,58 @@ func (d *SummatorDesc) RegisterHTTP(mux transport.Router) {
 		}
 	})
 
+	// Handlers for Wait
+
+	mux.HandleFunc("/"+pattern_gobee_Summator_Wait_0, func(w http.ResponseWriter, r *http.Request) {
+		//TODO only POST is supported atm
+
+		inbound, outbound := httpruntime.MarshalerForRequest(r)
+		var req WaitRequest
+		err := inbound.Unmarshal(r.Body, &req)
+		if err != nil {
+			httpruntime.SetError(r.Context(), r, w, errors.Wrap(err, "couldn't read request JSON"), nil)
+			return
+		}
+		ret, err := d.svc.Wait(r.Context(), &req)
+		if err != nil {
+			httpruntime.SetError(r.Context(), r, w, errors.Wrap(err, "returned from handler"), nil)
+			return
+		}
+
+		w.Header().Set("Content-Type", outbound.ContentType())
+		err = outbound.Marshal(w, ret)
+		if err != nil {
+			httpruntime.SetError(r.Context(), r, w, errors.Wrap(err, "couldn't write response"), nil)
+			return
+		}
+	})
+
+	// Handlers for Hello
+
+	mux.HandleFunc("/"+pattern_gobee_Summator_Hello_0, func(w http.ResponseWriter, r *http.Request) {
+		//TODO only POST is supported atm
+
+		inbound, outbound := httpruntime.MarshalerForRequest(r)
+		var req StrMessage
+		err := inbound.Unmarshal(r.Body, &req)
+		if err != nil {
+			httpruntime.SetError(r.Context(), r, w, errors.Wrap(err, "couldn't read request JSON"), nil)
+			return
+		}
+		ret, err := d.svc.Hello(r.Context(), &req)
+		if err != nil {
+			httpruntime.SetError(r.Context(), r, w, errors.Wrap(err, "returned from handler"), nil)
+			return
+		}
+
+		w.Header().Set("Content-Type", outbound.ContentType())
+		err = outbound.Marshal(w, ret)
+		if err != nil {
+			httpruntime.SetError(r.Context(), r, w, errors.Wrap(err, "couldn't write response"), nil)
+			return
+		}
+	})
+
 }
 
 var _swaggerDef_pb_sum_proto = []byte(`{
@@ -87,14 +139,14 @@ var _swaggerDef_pb_sum_proto = []byte(`{
     "application/json"
   ],
   "paths": {
-    "/v1/example/sum": {
+    "/v1/example/hello": {
       "post": {
-        "operationId": "Sum",
+        "operationId": "Hello",
         "responses": {
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/sumpbSumResponse"
+              "$ref": "#/definitions/exampleStrMessage"
             }
           }
         },
@@ -104,7 +156,59 @@ var _swaggerDef_pb_sum_proto = []byte(`{
             "in": "body",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/sumpbSumRequest"
+              "$ref": "#/definitions/exampleStrMessage"
+            }
+          }
+        ],
+        "tags": [
+          "Summator"
+        ]
+      }
+    },
+    "/v1/example/sum": {
+      "post": {
+        "operationId": "Sum",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/exampleSumResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/exampleSumRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Summator"
+        ]
+      }
+    },
+    "/v1/example/wait": {
+      "post": {
+        "operationId": "Wait",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/exampleWaitResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/exampleWaitRequest"
             }
           }
         ],
@@ -115,7 +219,15 @@ var _swaggerDef_pb_sum_proto = []byte(`{
     }
   },
   "definitions": {
-    "sumpbSumRequest": {
+    "exampleStrMessage": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "exampleSumRequest": {
       "type": "object",
       "properties": {
         "a": {
@@ -131,13 +243,30 @@ var _swaggerDef_pb_sum_proto = []byte(`{
       },
       "description": "SumRequest is a request for Summator service."
     },
-    "sumpbSumResponse": {
+    "exampleSumResponse": {
       "type": "object",
       "properties": {
         "sum": {
           "type": "string",
           "format": "int64"
         },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "exampleWaitRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      },
+      "title": "WaitRequest is only for test"
+    },
+    "exampleWaitResponse": {
+      "type": "object",
+      "properties": {
         "error": {
           "type": "string"
         }
@@ -150,4 +279,8 @@ var _swaggerDef_pb_sum_proto = []byte(`{
 
 var (
 	pattern_gobee_Summator_Sum_0 = strings.Join([]string{"v1", "example", "sum"}, "/")
+
+	pattern_gobee_Summator_Wait_0 = strings.Join([]string{"v1", "example", "wait"}, "/")
+
+	pattern_gobee_Summator_Hello_0 = strings.Join([]string{"v1", "example", "hello"}, "/")
 )

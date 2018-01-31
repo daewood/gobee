@@ -1,5 +1,5 @@
 syntax = "proto3";
-package sumpb;
+package example;
 
 import "google/api/annotations.proto";
 
@@ -10,7 +10,20 @@ service Summator {
       body: "*"
 		};
   }
+  rpc Wait(WaitRequest) returns (WaitResponse) {
+		option (google.api.http) = {
+			post: "/v1/example/wait"
+      body: "*"
+		};
+  }
+  rpc Hello(StrMessage) returns (StrMessage) {
+		option (google.api.http) = {
+			post: "/v1/example/hello"
+      body: "*"
+		};
+  }
 }
+
 // SumRequest is a request for Summator service.
 message SumRequest {
   // A is the number we're adding to. Can't be zero for the sake of example.
@@ -23,3 +36,16 @@ message SumResponse {
         int64 sum = 1;
         string error = 2;
 }
+
+// WaitRequest is only for test
+message WaitRequest {
+  string name = 1;
+}
+
+message WaitResponse {
+  string error = 1;
+}
+
+message StrMessage {
+   string value = 1;
+ }
