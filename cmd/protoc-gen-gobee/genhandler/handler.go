@@ -73,7 +73,7 @@ func (g *Generator) Generate(targets []*descriptor.File, fileToSwagger map[strin
 		name := file.GetName()
 		ext := filepath.Ext(name)
 		base := strings.TrimSuffix(name, ext)
-		output := fmt.Sprintf("%s.pb.goclay.go", base)
+		output := fmt.Sprintf("%s.pb.gobee.go", base)
 		files = append(files, &plugin.CodeGeneratorResponse_File{
 			Name:    proto.String(output),
 			Content: proto.String(string(formatted)),
